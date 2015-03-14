@@ -36,6 +36,8 @@ public:
 
 *)
 
+// NOTE: took this approach from HX:
+// https://github.com/githwxi/ATS-Postiats/blob/master/doc/EXAMPLE/TYPEVAL/dotprod.dats
 abstype Z
 abstype S(type)
 
