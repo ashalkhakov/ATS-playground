@@ -194,48 +194,33 @@ fun{T:t@ype}
 eval (x: &T, i: double): double
 
 (* ****** ****** *)
-
+//
 abst@ype Tid
-
-local
-
+//
 assume Tid = int
-
-in // in of [local]
-
+//
 fun Eid (): Tid = 0
+//
 implement
 eval<Tid> (x, i) = i
-
-end // end of [local]
-
+//
 (* ****** ****** *)
-
+//
 abst@ype Tconst
-
-local
 //
 assume Tconst = double
-//
-in // in of [local]
 //
 fun Econst (x: double): Tconst = x
 //
 implement
 eval<Tconst> (x, i) = x
 //
-end // end of [local]
-
 (* ****** ****** *)
-
+//
 abst@ype Tadd (t@ype, t@ype)
-
-local
 //
 typedef Tadd_ (a:t@ype, b:t@ype) = @{summand0=a, summand1=b}
 assume Tadd (a:t@ype, b:t@ype) = Tadd_ (a, b)
-//
-in // in of [local]
 //
 fun{a,b:t@ype}
 Eadd (e0: a, e1: b): Tadd (a, b) =
@@ -249,18 +234,12 @@ in
   e0 + e1
 end
 //
-end // end of [local]
-
 (* ****** ****** *)
-
+//
 abst@ype Tdiv (t@ype, t@ype)
-
-local
 //
 typedef Tdiv_ (a:t@ype, b:t@ype) = @{numerator=a, denumerator=b}
 assume Tdiv (a:t@ype, b:t@ype) = Tdiv_ (a, b)
-//
-in // in of [local]
 //
 fun{a,b:t@ype}
 Ediv (e0: a, e1: b): Tdiv (a, b) =
@@ -274,8 +253,6 @@ in
   e0 / e1
 end // end of [eval]
 //
-end // end of [local]
-
 (* ****** ****** *)
 
 fun{T:t@ype}
