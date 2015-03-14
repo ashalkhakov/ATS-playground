@@ -188,28 +188,59 @@ cout << integrate (x/(1.0+x),1.0,5.0,10) << endl;
 // types must be pairwise distinct!
 // e.g. Tid (represented by int) is not Tconst (represented by double)
 // likewise, Tadd and Tdiv are non-compatible records
-abst@ype Tid
-abst@ype Tconst
-abst@ype Tadd (t@ype, t@ype)
-abst@ype Tdiv (t@ype, t@ype)
 
 extern
 fun{T:t@ype}
 eval (x: &T, i: double): double
 
+(* ****** ****** *)
+
+abst@ype Tid
+
+local
+
 assume Tid = int
+
+in // in of [local]
+
 fun Eid (): Tid = 0
 implement
 eval<Tid> (x, i) = i
 
+end // end of [local]
+
+(* ****** ****** *)
+
+abst@ype Tconst
+
+local
+//
 assume Tconst = double
+//
+in // in of [local]
+//
 fun Econst (x: double): Tconst = x
+//
 implement
 eval<Tconst> (x, i) = x
+//
+end // end of [local]
 
+(* ****** ****** *)
+
+abst@ype Tadd (t@ype, t@ype)
+
+local
+//
 typedef Tadd_ (a:t@ype, b:t@ype) = @{summand0=a, summand1=b}
 assume Tadd (a:t@ype, b:t@ype) = Tadd_ (a, b)
-fun{a,b:t@ype} Eadd (e0: a, e1: b): Tadd (a, b) = @{summand0=e0, summand1=e1}
+//
+in // in of [local]
+//
+fun{a,b:t@ype}
+Eadd (e0: a, e1: b): Tadd (a, b) =
+  @{summand0=e0, summand1=e1}
+//
 implement(E1,E2)
 eval<Tadd(E1,E2)> (x, i) = let
   val e0 = eval<E1> (x.summand0, i)
@@ -217,17 +248,35 @@ eval<Tadd(E1,E2)> (x, i) = let
 in
   e0 + e1
 end
+//
+end // end of [local]
 
+(* ****** ****** *)
+
+abst@ype Tdiv (t@ype, t@ype)
+
+local
+//
 typedef Tdiv_ (a:t@ype, b:t@ype) = @{numerator=a, denumerator=b}
 assume Tdiv (a:t@ype, b:t@ype) = Tdiv_ (a, b)
-fun{a,b:t@ype} Ediv (e0: a, e1: b): Tdiv (a, b) = @{numerator=e0, denumerator=e1}
+//
+in // in of [local]
+//
+fun{a,b:t@ype}
+Ediv (e0: a, e1: b): Tdiv (a, b) =
+  @{numerator=e0, denumerator=e1}
+//
 implement(E1,E2)
 eval<Tdiv(E1,E2)> (x, i) = let
   val e0 = eval<E1> (x.numerator, i)
   val e1 = eval<E2> (x.denumerator, i)
 in
   e0 / e1
-end
+end // end of [eval]
+//
+end // end of [local]
+
+(* ****** ****** *)
 
 fun{T:t@ype}
 integrate (e: &T, from: double, to: double, n: int): double = let
