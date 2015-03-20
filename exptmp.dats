@@ -4,6 +4,10 @@
 ** based on the article:
 ** http://www.angelikalanger.com/Articles/Cuj/ExpressionTemplates/ExpressionTemplates.htm
 **
+** NOTE: also take a look at the follow-ups:
+** https://github.com/githwxi/ATS-Postiats-test/blob/master/contrib/hwxi/TEST0/exptmp.dats
+** https://github.com/githwxi/ATS-Postiats-test/blob/master/contrib/hwxi/TEST0/exptmp_ref.dats
+**
 ** Author: Artyom Shalkhakov
 ** Date: Mar 14, 2015
 ** License: Public Domain
@@ -186,74 +190,81 @@ cout << integrate (x/(1.0+x),1.0,5.0,10) << endl;
 }
 *)
 
-// NOTE: for static dispatch to work properly,
-// types must be pairwise distinct!
-// e.g. Tid (represented by int) is not Tconst (represented by double)
-// likewise, Tadd and Tdiv are non-compatible records
-
 extern
 fun{T:t@ype}
 eval (x: &T, i: double): double
 
 (* ****** ****** *)
 //
-abst@ype Tid
+abst@ype Tid = int
+//
+local
 //
 assume Tid = int
 //
-fun Eid (): Tid = 0
+in
+//
+fun{} Eid (): Tid = 0
 //
 implement
 eval<Tid> (x, i) = i
 //
-(* ****** ****** *)
-//
-abst@ype Tconst
-//
-assume Tconst = double
-//
-fun Econst (x: double): Tconst = x
-//
-implement
-eval<Tconst> (x, i) = x
-//
-(* ****** ****** *)
-//
-abst@ype Tadd (t@ype, t@ype)
-//
-typedef Tadd_ (a:t@ype, b:t@ype) = @{summand0=a, summand1=b}
-assume Tadd (a:t@ype, b:t@ype) = Tadd_ (a, b)
-//
-fun{a,b:t@ype}
-Eadd (e0: a, e1: b): Tadd (a, b) =
-  @{summand0=e0, summand1=e1}
-//
-implement(E1,E2)
-eval<Tadd(E1,E2)> (x, i) = let
-  val e0 = eval<E1> (x.summand0, i)
-  val e1 = eval<E2> (x.summand1, i)
-in
-  e0 + e1
 end
 //
 (* ****** ****** *)
 //
-abst@ype Tdiv (t@ype, t@ype)
+abst@ype Tconst = double
 //
-typedef Tdiv_ (a:t@ype, b:t@ype) = @{numerator=a, denumerator=b}
-assume Tdiv (a:t@ype, b:t@ype) = Tdiv_ (a, b)
+local
+//
+assume Tconst = double
+//
+in
+//
+fun{} Econst (x: double): Tconst = x
+//
+implement
+eval<Tconst> (x, i) = x
+//
+end
+//
+(* ****** ****** *)
+//
+abst@ype Tadd (a:t@ype, b:t@ype) = @(a, b)
+//
+local
+//
+assume Tadd (a:t@ype, b:t@ype) = @(a, b)
+//
+in
 //
 fun{a,b:t@ype}
-Ediv (e0: a, e1: b): Tdiv (a, b) =
-  @{numerator=e0, denumerator=e1}
+Eadd (e0: a, e1: b): Tadd (a, b) = @(e0, e1)
 //
 implement(E1,E2)
-eval<Tdiv(E1,E2)> (x, i) = let
-  val e0 = eval<E1> (x.numerator, i)
-  val e1 = eval<E2> (x.denumerator, i)
+eval<Tadd(E1,E2)> (x, i) =
+  eval<E1> (x.0, i) + eval<E2> (x.1, i)
+//
+end
+//
+(* ****** ****** *)
+//
+abst@ype Tdiv (a:t@ype, b:t@ype) = @(a, b)
+//
+local
+//
+assume Tdiv (a:t@ype, b:t@ype) = @(a, b)
+//
 in
-  e0 / e1
-end // end of [eval]
+//
+fun{a,b:t@ype}
+Ediv (e0: a, e1: b): Tdiv (a, b) = @(e0, e1)
+//
+implement(E1,E2)
+eval<Tdiv(E1,E2)> (x, i) =
+  eval<E1> (x.0, i) / eval<E2> (x.1, i)
+//
+end
 //
 (* ****** ****** *)
 
