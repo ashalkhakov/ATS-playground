@@ -1,4 +1,79 @@
 //
+extern
+fun
+vector_init_clo {v:view} (
+  pfv: !v
+| vec: &vec? >> _
+, f: &(!v | natLt(NDIM)) -<clo1> T
+): void // end of [vector_init_clo]
+//
+extern
+fun{vt:vt@ype}
+vector_init$fwork (natLt(NDIM), &(vt)): T
+//
+extern
+fun{vt:vt@ype}
+vector_init_env (
+  vec: &vec? >> _, env: &(vt)
+): void // end of [vector_init_env]
+//
+extern
+fun{a:t@ype}
+vector_fold_clo {v:view} (
+  pfv: !v
+| f: &(!v | &a >> a, natLt(NDIM)) -<clo1> void
+, res: &a >> a
+): void // end of [vector_fold_clo]
+//
+(* ****** ****** *)
+//
+extern
+fun
+add_vector_vector (&vec, &vec): vec
+//
+extern
+fun
+mul_T_vector (T, &vec): vec
+//
+extern
+fun
+neg_vector (&vec): vec
+//
+extern
+fun
+sub_vector_vector (&vec, &vec): vec
+//
+extern
+fun
+length_sq_vector (&vec): T
+//
+extern
+fun
+length_vector (&vec): T
+//
+extern
+fun
+dotprod_vector_vector (&vec, &vec): T
+//
+(*
+extern
+fun{}
+equal_vector$eps (): T
+*)
+extern
+fun
+equal_vector_vector (&vec, &vec): bool
+//
+extern
+fun
+fprint_vector (FILEref, &vec): void
+//
+extern
+fun
+print_vector (&vec): void
+//
+(* ****** ****** *)
+//
 implement
 vector_init_clo {v} (pfv | res, f) = {
 //
@@ -92,7 +167,7 @@ add_vector_vector (x, y) = let
   //
   implement
   vector_init$fwork<VT> (i, env) =
-    gnumber_zero<T> ()
+    gnumber_int<T> (0)
 //    gadd_val_val<T> (x.V.[i], y.V.[i])
   //
   var env : VT = (view@(x), view@(y) | addr@(x), addr@(y))
@@ -160,7 +235,7 @@ length_sq_vector (x) = let
     val v = x.V.[i] in
     e := gadd_val_val<T> (e, gmul_val_val<T> (v, v))
   end // end of [f]
-  var res: T = gnumber_zero<T> ()
+  var res: T = gnumber_int<T> (0)
   val () = vector_fold_clo<T> {V} (pfv | f, res)
   prval () = view@(x) := pfv
 in
@@ -183,7 +258,7 @@ dotprod_vector_vector (x, y) = let
   var f = lam@ (pf: !V >> _ | e: &T >> T, i: natLt(NDIM)): void =>
     e := gadd_val_val<T> (e, gmul_val_val<T> (x.V.[i], y.V.[i]))
   // end of [f]
-  var res: T = gnumber_zero<T> ()
+  var res: T = gnumber_int<T> (0)
   val () = vector_fold_clo<T> {V} (pfv | f, res)
   prval () = view@(x) := pfv.0
   and () = view@(y) := pfv.1
@@ -191,13 +266,10 @@ in
   res
 end // end of [dotprod_vector_vector]
 //
-implement{}
-equal_vector_vector$eps () = gnumber_double<T> (0.001)
-//
 implement
 equal_vector_vector (x, y) = let
 //
-val eps = equal_vector_vector$eps<> ()
+val eps = equal_vector$eps<> ()
 //
 implement
 array_foreach2$cont<T,T><bool> (x0, y0, res) = let

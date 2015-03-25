@@ -40,6 +40,20 @@ vector_fold_clo {v:view} (
 //
 (* ****** ****** *)
 //
+// how to declare these properly?
+//
+typedef
+vector_binop_type = (&vec, &vec) -> vec
+//
+typedef
+vector_unop_type = (&vec) -> vec
+//
+typedef
+vector_T_mul_type = (T, &vec) -> vec
+//
+typedef
+vector_T_type = (&vec) -> T
+//
 fun
 add_vector_vector (&vec, &vec): vec
 //
