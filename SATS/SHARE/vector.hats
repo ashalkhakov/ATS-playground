@@ -15,7 +15,7 @@ fun
 vector_init (&vector_t0ype? >> vec, T, T, T): void
 *)
 (* ****** ****** *)
-
+//
 fun
 vector_init_clo {v:view} (
   pfv: !v
@@ -23,13 +23,21 @@ vector_init_clo {v:view} (
 , f: &(!v | natLt(NDIM)) -<clo1> T
 ): void // end of [vector_init_clo]
 //
+fun{vt:vt@ype}
+vector_init$fwork (natLt(NDIM), &(vt)): T
+//
+fun{vt:vt@ype}
+vector_init_env (
+  vec: &vec? >> _, env: &(vt)
+): void // end of [vector_init_env]
+//
 fun{a:t@ype}
 vector_fold_clo {v:view} (
   pfv: !v
 | f: &(!v | &a >> a, natLt(NDIM)) -<clo1> void
 , res: &a >> a
 ): void // end of [vector_fold_clo]
-
+//
 (* ****** ****** *)
 //
 fun
@@ -45,9 +53,28 @@ fun
 sub_vector_vector (&vec, &vec): vec
 //
 fun
-dotprod_vector_vector (&vec, &vec): T
+length_sq_vector (&vec): T
 //
 fun
-compare_vector_vector_T (&vec, &vec, T(*epsilon*)): int
+length_vector (&vec): T
+//
+fun
+dotprod_vector_vector (&vec, &vec): T
+//
+// TODO: use compare_vector_vector_eps
+// where eps is a function template
+// (just the usual comparison function)
+// - also, better supply an equality function (not general comparison!)
+// - what about ordering (lt/gt)? do we even need it?
+fun{}
+equal_vector_vector$eps (): T
+fun
+equal_vector_vector (&vec, &vec): bool
+//
+fun
+fprint_vector (FILEref, &vec): void
+//
+fun
+print_vector (&vec): void
 //
 (* ****** ****** *)
