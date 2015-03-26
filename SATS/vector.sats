@@ -165,7 +165,9 @@ overload .z with vec3f_set_z of 10
 typedef
 struct {
   float V[4];
-} vec4f_t;
+}
+/* __attribute__((__aligned__(16))) */
+vec4f_t;
 
 #endif /* ATS_VEC4F_DEFINED */
 

@@ -16,6 +16,17 @@ fun{vt:vt@ype}
 vector_init_env (
   vec: &vec? >> _, env: &(vt)
 ): void // end of [vector_init_env]
+
+// TODO: generalize vector_init_env?
+// unary: (&vec? >> _, &a): void
+// binary: (&vec? >> _, &a, &b): void
+// ternary: (&vec? >> _, &a, &b, &c): void
+// quaternary: (&vec? >> _, &a, &b, &c, &d): void
+// OR, this way?
+// unary: (&vec? >> _, &vec, &env): void
+// binary: (&vec? >> _, &vec, &vec, &env): void
+// ternary: (&vec? >> _, &vec, &vec, &env): void
+
 //
 extern
 fun{a:t@ype}
@@ -23,6 +34,17 @@ vector_fold_clo {v:view} (
   pfv: !v
 | f: &(!v | &a >> a, natLt(NDIM)) -<clo1> void
 , res: &a >> a
+): void // end of [vector_fold_clo]
+//
+extern
+fun{a:t@ype}{env:vt@ype}
+vector_fold$fwork (&a >> a, natLt(NDIM), &(env) >> _): void
+//
+extern
+fun{a:t@ype}{env:vt@ype}
+vector_fold_env  (
+  res: &a >> a
+, env: &(env) >> _
 ): void // end of [vector_fold_clo]
 //
 (* ****** ****** *)
@@ -101,21 +123,43 @@ implement{vt}
 vector_init_env (v, env) = {
 //
 fun
-loop {i:nat | i <= NDIM} (
-  res: &(@[INV(T)][NDIM-i]?) >> _, env: &vt, i: int i
-) : void =
-if i < NDIM then {
-  val pres = addr@(res)
-  prval (pfres_at, pfres_arr1) = array_v_uncons (view@(res))
-  val () = !pres := vector_init$fwork<vt> (i, env)
-  val (pfres_arr1 | pres_1) = viewptr_match (pfres_arr1 | ptr1_succ<T> (pres))
-  val () = loop (!pres_1, env, i+1)
-  prval () = view@(res) := array_v_cons (pfres_at, pfres_arr1)
-} else {
-  prval () = view@(res) := array_v_unnil_nil (view@(res))
-} (* end of [loop] *)
+aux (res: &(@[T?][NDIM]) >> @[T][NDIM], env: &vt): void = {
 //
-val () = loop (v.V, env, 0)
+var i: int = 0
+prval [lres:addr] EQADDR () = eqaddr_make_ptr (addr@(res))
+var p = addr@(res)
+prvar pf0 = array_v_nil {T} ()
+prvar pf1 = view@(res)
+//
+val () =
+while* {i:nat | i <= NDIM} .<NDIM-i>. (
+  i: int (i)
+, p: ptr (lres + i*sizeof(T))
+, pf0: array_v (T, lres, i)
+, pf1: array_v (T?, lres+i*sizeof(T), NDIM-i)
+) : (
+  pf0: array_v (T, lres, NDIM)
+, pf1: array_v (T?, lres+i*sizeof(T), 0)
+) => (
+  i < NDIM
+) {
+//
+  prval (pf_at, pf1_res) = array_v_uncons {T?} (pf1)
+  prval () = pf1 := pf1_res
+  val e = vector_init$fwork<vt> (i, env)
+  val () = ptr_set<T> (pf_at | p, e)
+  val () = p := ptr1_succ<T> (p)
+  prval () = pf0 := array_v_extend {T} (pf0, pf_at)
+  val () = i := i + 1
+//
+} // end of [val]
+//
+prval () = view@(res) := pf0
+prval () = array_v_unnil {T?} (pf1)
+//
+} (* end of [aux] *)
+//
+val () = aux (v.V, env)
 //
 } (* end of [vector_init_env] *)
 //
@@ -134,25 +178,42 @@ loop {i:nat | i <= NDIM} (
 //
 val () = loop (pfv | f, x, 0)
 } (* end of [vector_fold_clo] *)
+//
+implement{a}{vt}
+vector_fold_env (x, env) = {
+//
+var i: int = 0
+//
+val () =
+while* {i:nat | i <= NDIM} .<NDIM-i>. (
+  i: int (i)
+) => (
+  i < NDIM
+) {
+  val () = vector_fold$fwork<a><vt> (x, i, env)
+  val () = i := i + 1
+} // end of [val]
+//
+} (* end of [vector_fold_env] *)
 
 (* ****** ****** *)
 
 implement
 add_vector_vector (x, y) = let
   var res: vec
-  prval pfv = (view@(x), view@(y))
-  prval [lx:addr] EQADDR () = eqaddr_make_ptr (addr@(x))
-  prval [ly:addr] EQADDR () = eqaddr_make_ptr (addr@(y))
-  viewdef V = (vec @ lx, vec @ ly)
-  var f = lam@ (pf: !V >> _ | i: natLt(NDIM)): T =>
-    gadd_val_val<T> (x.V.[i], y.V.[i])
-  // end of [f]
-  val () = vector_init_clo {V} (pfv | res, f)
-  prval () = view@(x) := pfv.0
-  and () = view@(y) := pfv.1
+  vtypedef VT = (vec, vec)  
+  //
+  implement
+  vector_init$fwork<VT> (i, env) =
+    gadd_val_val<T> (env.0.V.[i], env.1.V.[i])
+  //
+  var env : VT = @(x, y)
+  val () = vector_init_env<VT> (res, env)
+  //
 in
   res
 end // end of [add_vector_vector]
+
 (*
 // NOTE: this doesn't work (template is not found)
 implement
@@ -182,14 +243,13 @@ end // end of [add_vector_vector]
 implement
 mul_T_vector (x, y) = let
   var res: vec
-  prval pfv = (view@(y))
-  prval [ly:addr] EQADDR () = eqaddr_make_ptr (addr@(y))
-  viewdef V = (vec @ ly)
-  var f = lam@ (pf: !V >> _ | i: natLt(NDIM)): T =>
-    gmul_val_val<T> (x, y.V.[i])
-  // end of [f]
-  val () = vector_init_clo {V} (pfv | res, f)
-  prval () = view@(y) := pfv
+  vtypedef VT = vec
+  //
+  implement
+  vector_init$fwork<VT> (i, env) =
+    gmul_val_val<T> (x, env.V.[i])
+  //
+  val () = vector_init_env<VT> (res, y)
 in
   res
 end // end of [mul_T_vector]
@@ -197,14 +257,13 @@ end // end of [mul_T_vector]
 implement
 neg_vector (x) = let
   var res: vec
-  prval pfv = (view@(x))
-  prval [lx:addr] EQADDR () = eqaddr_make_ptr (addr@(x))
-  viewdef V = (vec @ lx)
-  var f = lam@ (pf: !V >> _ | i: natLt(NDIM)): T =>
-    gneg_val<T> (x.V.[i])
-  // end of [f]
-  val () = vector_init_clo {V} (pfv | res, f)
-  prval () = view@(x) := pfv
+  vtypedef VT = vec
+  //
+  implement
+  vector_init$fwork<VT> (i, env) =
+    gneg_val<T> (env.V.[i])
+  //
+  val () = vector_init_env<VT> (res, x)
 in
   res
 end // end of [neg_vector]
@@ -212,32 +271,32 @@ end // end of [neg_vector]
 implement
 sub_vector_vector (x, y) = let
   var res: vec
-  prval pfv = (view@(x), view@(y))
-  prval [lx:addr] EQADDR () = eqaddr_make_ptr (addr@(x))
-  prval [ly:addr] EQADDR () = eqaddr_make_ptr (addr@(y))
-  viewdef V = (vec @ lx, vec @ ly)
-  var f = lam@ (pf: !V >> _ | i: natLt(NDIM)): T =>
-    gsub_val_val<T> (x.V.[i], y.V.[i])
-  // end of [f]
-  val () = vector_init_clo {V} (pfv | res, f)
-  prval () = view@(x) := pfv.0
-  and () = view@(y) := pfv.1
+  vtypedef VT = (vec, vec)
+  //
+  implement
+  vector_init$fwork<VT> (i, env) =
+    gsub_val_val<T> (env.0.V.[i], env.1.V.[i])
+  //
+  var env : VT = @(x, y)
+  val () = vector_init_env<VT> (res, env)
 in
   res
 end // end of [sub_vector_vector]
 //
 implement
 length_sq_vector (x) = let
-  prval pfv = view@(x)
-  prval [lx:addr] EQADDR () = eqaddr_make_ptr (addr@(x))
-  viewdef V = vec @ lx
-  var f = lam@ (pf: !V >> _ | e: &T >> T, i: natLt(NDIM)): void => let
-    val v = x.V.[i] in
+  //
+  vtypedef VT = vec
+  //
+  implement
+  vector_fold$fwork<T><VT> (e, i, env) = let
+    val v = env.V.[i] in
     e := gadd_val_val<T> (e, gmul_val_val<T> (v, v))
-  end // end of [f]
-  var res: T = gnumber_int<T> (0)
-  val () = vector_fold_clo<T> {V} (pfv | f, res)
-  prval () = view@(x) := pfv
+  end // end of [vector_fold$fwork]
+  //
+  var res: T = gnumber_int<T>(0)
+  val () = vector_fold_env<T><VT> (res, x)
+  //
 in
   res
 end // end of [length_sq_vector]
@@ -251,17 +310,18 @@ end // end of [length_vector]
 //
 implement
 dotprod_vector_vector (x, y) = let
-  prval pfv = (view@(x), view@(y))
-  prval [lx:addr] EQADDR () = eqaddr_make_ptr (addr@(x))
-  prval [ly:addr] EQADDR () = eqaddr_make_ptr (addr@(y))
-  viewdef V = (vec @ lx, vec @ ly)
-  var f = lam@ (pf: !V >> _ | e: &T >> T, i: natLt(NDIM)): void =>
-    e := gadd_val_val<T> (e, gmul_val_val<T> (x.V.[i], y.V.[i]))
-  // end of [f]
+  //
+  vtypedef VT = (vec, vec)
+  //
+  implement
+  vector_fold$fwork<T><VT> (e, i, env) =
+    e := gadd_val_val<T> (e, gmul_val_val<T> (env.0.V.[i], env.1.V.[i]))
+  //
   var res: T = gnumber_int<T> (0)
-  val () = vector_fold_clo<T> {V} (pfv | f, res)
-  prval () = view@(x) := pfv.0
-  and () = view@(y) := pfv.1
+  var env: VT = @(x, y)
+  //
+  val () = vector_fold_env<T><VT> (res, env)
+  //
 in
   res
 end // end of [dotprod_vector_vector]

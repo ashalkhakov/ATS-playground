@@ -10,6 +10,9 @@ staload "../SATS/vector.sats"
 
 staload VEC2F = {
 //
+#define ATS_PACKNAME "PLAYGROUND.vector.vec2f"
+#define ATS_DYNLOADFLAG 0
+//
 staload "../SATS/vector.sats"
 
 staload _ = "prelude/DATS/gnumber.dats"
@@ -96,6 +99,9 @@ vec2f_set_y (v, y) = v.V.[1] := y
 (* ****** ****** *)
 
 staload VEC3F = {
+//
+#define ATS_PACKNAME "PLAYGROUND.vector.vec3f"
+#define ATS_DYNLOADFLAG 0
 //
 staload "../SATS/vector.sats"
 
@@ -224,6 +230,9 @@ vec3f_set_z (v, z) = v.V.[2] := z
 (* ****** ****** *)
 
 staload VEC4F = {
+//
+#define ATS_PACKNAME "PLAYGROUND.vector.vec4f"
+#define ATS_DYNLOADFLAG 0
 //
 staload "../SATS/vector.sats"
 
@@ -376,11 +385,10 @@ var v2: vec3f
 var v3: vec3f
 val () = v1.init (1.0f, 0.0f, 0.0f)
 val () = v2.init (0.0f, 1.0f, 0.0f)
-val () = v3 := v1 + v2
+var v3_tmp = 2.0f * v2
+val () = v3 := v1 + v3_tmp
 //
-val () = println!("x = ", v3.x())
-val () = println!("y = ", v3.y())
-val () = println!("z = ", v3.z())
+val () = println!("v3 = ", v3)
 //
 val () = test_compare ()
 in
