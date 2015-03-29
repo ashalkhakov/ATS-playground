@@ -1,4 +1,13 @@
-#define ATS_PACKNAME "PLAYGROUND.vector3"
+(* ****** ****** *)
+
+//
+viewdef
+iso_v_vt (V:view, VT:vt@ype) =
+  ((&VT >> void) -<prf> V, (&void >> VT, V) -<prf> void)
+// end of [iso_v_vt]
+prfun
+make_iso_v_vt {V:view} {VT:vt@ype} (): iso_v_vt (V, VT)
+//
 
 (* ****** ****** *)
 
@@ -23,14 +32,33 @@ $extype_struct "vec2f_t" of {
 }
 
 stadef vec2f = vector_2_float_t0ype // local shorthand
-
+//
+fun{vt:vt@ype}
+vec2f_init$fwork (natLt(2), &(vt)): float
+//
+fun{a:t@ype}{env:vt@ype}
+vec2f_fold$fwork (&a >> a, natLt(2), &(env) >> _): void
+//
+fun{vt:vt@ype}
+vec2f_init_env (
+  vec: &vec2f? >> _, env: &(vt)
+): void // end of [vec2f_init_env]
+//
+fun{a:t@ype}{env:vt@ype}
+vec2f_fold_env  (
+  res: &a >> a
+, env: &(env) >> _
+): void // end of [vec2f_fold_env]
+//
 fun add_vec2f_vec2f (&vec2f, &vec2f): vec2f
 fun mul_float_vec2f (float, &vec2f): vec2f
 fun neg_vec2f (&vec2f): vec2f
 fun sub_vec2f_vec2f (&vec2f, &vec2f): vec2f
 fun length_sq_vec2f (&vec2f): float
 fun length_vec2f (&vec2f): float
+fun normalize_vec2f (&vec2f): vec2f
 fun dotprod_vec2f_vec2f (&vec2f, &vec2f): float
+fun lerp_vec2f_vec2f_float (&vec2f, &vec2f, float): vec2f
 fun{}
 equal_vec2f$eps (): float
 fun
@@ -47,15 +75,29 @@ overload ~ with neg_vec2f
 overload - with sub_vec2f_vec2f
 overload .length_sq with length_sq_vec2f
 overload .length with length_vec2f
+overload .normalize with normalize_vec2f
 overload dotprod with dotprod_vec2f_vec2f
+overload lerp with lerp_vec2f_vec2f_float
 overload = with equal_vec2f_vec2f
 overload fprint with fprint_vec2f
 overload print with print_vec2f
 //
 
 fun
-vec2f_init (&vec2f? >> _, float, float): void
-overload .init with vec2f_init
+vec2f_init1 (&vec2f? >> _, float): void
+overload .init with vec2f_init1
+
+fun
+vec2f_init2 (&vec2f? >> _, float, float): void
+overload .init with vec2f_init2
+
+fun
+vec2f_get_int (&vec2f, natLt(2)): float
+fun
+vec2f_set_int (&vec2f, natLt(2), float): void
+
+overload [] with vec2f_get_int of 10
+overload [] with vec2f_set_int of 10
 
 fun
 vec2f_get_x (&vec2f): float
@@ -96,14 +138,33 @@ $extype_struct "vec3f_t" of {
 }
 
 stadef vec3f = vector_3_float_t0ype // local shorthand
-
+//
+fun{vt:vt@ype}
+vec3f_init$fwork (natLt(3), &(vt)): float
+//
+fun{a:t@ype}{env:vt@ype}
+vec3f_fold$fwork (&a >> a, natLt(3), &(env) >> _): void
+//
+fun{vt:vt@ype}
+vec3f_init_env (
+  vec: &vec3f? >> _, env: &(vt)
+): void // end of [vec3f_init_env]
+//
+fun{a:t@ype}{env:vt@ype}
+vec3f_fold_env  (
+  res: &a >> a
+, env: &(env) >> _
+): void // end of [vec3f_fold_env]
+//
 fun add_vec3f_vec3f (&vec3f, &vec3f): vec3f
 fun mul_float_vec3f (float, &vec3f): vec3f
 fun neg_vec3f (&vec3f): vec3f
 fun sub_vec3f_vec3f (&vec3f, &vec3f): vec3f
 fun length_sq_vec3f (&vec3f): float
 fun length_vec3f (&vec3f): float
+fun normalize_vec3f (&vec3f): vec3f
 fun dotprod_vec3f_vec3f (&vec3f, &vec3f): float
+fun lerp_vec3f_vec3f_float (&vec3f, &vec3f, float): vec3f
 fun{}
 equal_vec3f$eps (): float
 fun
@@ -120,7 +181,9 @@ overload ~ with neg_vec3f of 10
 overload - with sub_vec3f_vec3f of 10
 overload .length_sq with length_sq_vec3f of 10
 overload .length with length_vec3f of 10
+overload .normalize with normalize_vec3f of 10
 overload dotprod with dotprod_vec3f_vec3f of 10
+overload lerp with lerp_vec3f_vec3f_float of 10
 overload = with equal_vec3f_vec3f of 10
 overload fprint with fprint_vec3f of 10
 overload print with print_vec3f of 10
@@ -130,8 +193,20 @@ fun
 crossprod_vec3f_vec3f (&vec3f, &vec3f): vec3f
 
 fun
-vec3f_init (&vec3f? >> _, float, float, float): void
-overload .init with vec3f_init of 10
+vec3f_init1 (&vec3f? >> _, float): void
+overload .init with vec3f_init1 of 10
+
+fun
+vec3f_init3 (&vec3f? >> _, float, float, float): void
+overload .init with vec3f_init3 of 10
+
+fun
+vec3f_get_int (&vec3f, natLt(3)): float
+fun
+vec3f_set_int (&vec3f, natLt(3), float): void
+
+overload [] with vec3f_get_int of 10
+overload [] with vec3f_set_int of 10
 
 fun
 vec3f_get_x (&vec3f): float
@@ -180,6 +255,24 @@ $extype_struct "vec4f_t" of {
 }
 
 stadef vec4f = vector_4_float_t0ype // local shorthand
+//
+fun{vt:vt@ype}
+vec4f_init$fwork (natLt(4), &(vt)): float
+//
+fun{a:t@ype}{env:vt@ype}
+vec4f_fold$fwork (&a >> a, natLt(4), &(env) >> _): void
+//
+fun{vt:vt@ype}
+vec4f_init_env (
+  vec: &vec4f? >> _, env: &(vt)
+): void // end of [vec4f_init_env]
+//
+fun{a:t@ype}{env:vt@ype}
+vec4f_fold_env  (
+  res: &a >> a
+, env: &(env) >> _
+): void // end of [vec3f_fold_env]
+//
 
 fun add_vec4f_vec4f (&vec4f, &vec4f): vec4f
 fun mul_float_vec4f (float, &vec4f): vec4f
@@ -187,7 +280,9 @@ fun neg_vec4f (&vec4f): vec4f
 fun sub_vec4f_vec4f (&vec4f, &vec4f): vec4f
 fun length_sq_vec4f (&vec4f): float
 fun length_vec4f (&vec4f): float
+fun normalize_vec4f (&vec4f): vec4f
 fun dotprod_vec4f_vec4f (&vec4f, &vec4f): float
+fun lerp_vec4f_vec4f_float (&vec4f, &vec4f, float): vec4f
 fun{}
 equal_vec4f$eps (): float
 fun
@@ -204,15 +299,29 @@ overload ~ with neg_vec4f
 overload - with sub_vec4f_vec4f
 overload .length_sq with length_sq_vec4f
 overload .length with length_vec4f
+overload .normalize with normalize_vec4f
 overload dotprod with dotprod_vec4f_vec4f
+overload lerp with lerp_vec4f_vec4f_float
 overload = with equal_vec4f_vec4f
 overload fprint with fprint_vec4f
 overload print with print_vec4f
 //
 
 fun
-vec4f_init (&vec4f? >> _, float, float, float, float): void
-overload .init with vec4f_init
+vec4f_init1 (&vec4f >> _, float): void
+overload .init with vec4f_init1
+
+fun
+vec4f_init4 (&vec4f? >> _, float, float, float, float): void
+overload .init with vec4f_init4
+
+fun
+vec4f_get_int (&vec4f, natLt(4)): float
+fun
+vec4f_set_int (&vec4f, natLt(4), float): void
+
+overload [] with vec4f_get_int of 10
+overload [] with vec4f_set_int of 10
 
 fun
 vec4f_get_x (&vec4f): float
