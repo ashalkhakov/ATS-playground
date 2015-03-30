@@ -23,6 +23,7 @@
 
 # emacs stuff
 *~
+.#*
 
 # ats specifics
 *_dats.c
