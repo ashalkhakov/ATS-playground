@@ -23,12 +23,15 @@ PATSCCOMP = $(CC) -D_XOPEN_SOURCE
 
 SOURCES_SATS += \
   ../SATS/vector.sats \
+  ../SATS/matrix.sats \
 
 SOURCES_DATS += \
   ../DATS/vec2f.dats \
   ../DATS/vec3f.dats \
   ../DATS/vec4f.dats \
+  ../DATS/matrix.dats \
   ../DATS/mat3x3f.dats \
+  ../DATS/mat4x4f.dats \
   test01.dats \
 
 ######

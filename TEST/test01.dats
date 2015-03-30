@@ -95,59 +95,55 @@ val () = {
   val () = EXPECT_NEAR (7.4f, m[1, 2], precision);
   val () = EXPECT_NEAR (0.1f, m[2, 2], precision);
 
-  val () = println!("transpose bef:")  
-  val () = (print_mat3x3f (m); print_newline ())
-  var m2 = transpose_mat3x3f (m)
-  val () = println!("transpose aft:")
-  val () = (print_mat3x3f (m2); print_newline ())
+  val () = println!("transpose bef:", m)
+  var m2 = transpose (m)
+  val () = println!("transpose aft:", m2)
 
-  var m3 = identity_mat3x3f ()
-  var m4 = mul_mat3x3f_mat3x3f (m3, m)
-  val () = println!("multiplication result (by identity):")
-  val () = (print_mat3x3f (m4); print_newline ())
+  var m3: mat3x3f; val () = m3.identity ()
+  var m4 = m3 * m
+  val () = println!("multiplication result (by identity):", m4)
 
   var m5: mat3x3f
-  val () = mat3x3f_init1 (m5, 0.2f)
-  var m6 = mul_float_mat3x3f (2.0f, m5)
-  val () = println!("multiplication result (by scalar):")
-  val () = (print_mat3x3f (m6); print_newline ())
+  val () = m5.init (0.2f)
+  var m6 = 2.0f * m5
+  val () = println!("multiplication result (by scalar):", m6)
 
   // test matrix multiplication
   var mrotx: mat3x3f
   val () =
-    mat3x3f_init9
-      (mrotx, 1.0f, 0.0f, 0.0f,
-              0.0f, vx, vy,
-              0.0f, ~vy, vx) where {
+    mrotx.init (
+      1.0f, 0.0f, 0.0f,
+      0.0f, vx, vy,
+      0.0f, ~vy, vx
+    ) where {
     val angle = (g0float2float_double_float(M_PI)) / 4.0f
     val vx = cos (angle)
     val vy = sin (angle)
   } // end of [val]
   var v0: vec3f
-  val () = vec3f_init3 (v0, 1.0f, 1.0f, 0.0f)
-  var v1 = mul_vec3f_mat3x3f (v0, mrotx)
-  val () = println!("vec bef rotation:")
-  val () = (print_vec3f (v0); print_newline ())
-  val () = println!("vec aft rotation:")
-  val () = (print_vec3f (v1); print_newline ())
+  val () = v0.init (1.0f, 1.0f, 0.0f)
+  var v1 = v0 * mrotx
+  val () = println!("vec bef rotation:", v0)
+  val () = println!("vec aft rotation:", v1)
   
   // test matrix inverse
-  var m_inv = invert_mat3x3f (mrotx)
-  val () = (println! ("m_inv: "); print_mat3x3f (m_inv); print_newline ())
-  var mident = mul_mat3x3f_mat3x3f (m_inv, mrotx)
-  val () = (println! ("near-identity matrix: "); print_mat3x3f (mident); print_newline ())
+  var m_inv = invert (mrotx)
+  val () = println! ("m_inv: ", m_inv)
+  var mident = m_inv * mrotx
+  val () = println! ("near-identity matrix: ", mident)
 } // end of [val]
 //
 val () = {
-  var m = identity_mat3x3f ()
-  val () = (print_mat3x3f (m); print_newline ())
+  var m: mat3x3f
+  val () = m.identity ()
+  val () = println! ("identity matrix: ", m)
 } // end of [val]
 //
 val () = {
-  var m1 = identity_mat3x3f ()
-  var m2 = identity_mat3x3f ()
-  var m3 = mul_mat3x3f_mat3x3f (m1, m2)
-  val () = (print_mat3x3f (m3); print_newline ())
+  var m1: mat3x3f; val () = m1.identity ()
+  var m2: mat3x3f; val () = m2.identity ()
+  var m3 = m1 * m2
+  val () = println! (m3)
 } // end of [val]
 //
 val () = println!("test_mat3x3f END")
