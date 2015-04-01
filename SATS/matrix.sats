@@ -23,7 +23,8 @@ struct {
 typedef
 matrix_3_3_float_t0ype =
 $extype_struct "mat3x3f_t" of {
-  M= @[vec3f][3] // NOTE: column-vectors!
+  // NOTE: row of column-vectors
+  M= @[vec3f][3]
 }
 
 stadef mat3x3f = matrix_3_3_float_t0ype // local shorthand
@@ -117,23 +118,24 @@ overload fprint with fprint_mat3x3f
 overload print with print_mat3x3f
 //
 
-// specifics
-// - translation_of_mat (&mat3x3): vec2
-// - mat_of_translation (&vec2): mat3x3
-// - translation_of_mat (&mat4x4): vec3
-// - mat_of_translation (&vec3): mat4x4
-// - mat_of_scale (&vec2): mat3x3
-// - mat_of_scale (&vec3): mat4x4
-// - mat4_of_rotation3 (&mat3x3): mat4x4
-// - mat3_of_rotationX (&vec2): mat3x3
-// - mat3_of_rotationY (&vec2): mat3x3
-// - mat3_of_rotationZ (&vec2): mat3x3
-// - mat3_of_rotationX (T): mat3x3 // angle in radians
-// - mat3_of_rotationY (T): mat3x3 // angle in radians
-// - mat3_of_rotationZ (T): mat3x3 // angle in radians
-// - mat4_of_perspective (T, T, T, T, T): mat4x4
-// - mat4_of_ortho //
-// - mat4_of_look_at //
+fun
+mat3x3f_of_translation (&vec2f): mat3x3f
+fun
+mat3x3f_of_scale (&vec2f): mat3x3f
+fun
+mat3x3f_rotation_x_vec2f (&vec2f): mat3x3f
+fun
+mat3x3f_rotation_y_vec2f (&vec2f): mat3x3f
+fun
+mat3x3f_rotation_z_vec2f (&vec2f): mat3x3f
+fun
+mat3x3f_rotation_x_rad (float): mat3x3f
+fun
+mat3x3f_rotation_y_rad (float): mat3x3f
+fun
+mat3x3f_rotation_z_rad (float): mat3x3f
+
+// TODO: overloads for the functions declared above?
 
 (* ****** ****** *)
 
@@ -153,7 +155,8 @@ struct {
 typedef
 matrix_4_4_float_t0ype =
 $extype_struct "mat4x4f_t" of {
-  M= @[vec4f][4] // NOTE: column-vectors!
+  // NOTE: row of column-vectors
+  M= @[vec4f][4]
 }
 
 stadef mat4x4f = matrix_4_4_float_t0ype // local shorthand
@@ -185,6 +188,7 @@ mat4x4f_init_arrptr {n:nat | n >= 16} (
 
 overload .init with mat4x4f_init1
 overload .init with mat4x4f_init16
+overload .init with mat4x4f_init4_vec4f
 overload .init with mat4x4f_init_arrptr
 
 fun
@@ -243,3 +247,16 @@ overload * with mul_vec4f_mat4x4f
 overload fprint with fprint_mat4x4f
 overload print with print_mat4x4f
 //
+
+fun
+mat4x4f_of_translation (&vec3f): mat4x4f
+fun
+mat4x4f_of_scale (&vec3f): mat4x4f
+fun
+mat4x4f_of_mat3x3f (&mat3x3f): mat4x4f
+fun
+mat4x4f_perspective (fovy: float, aspect: float, znear: float, zfar: float, handedness: float): mat4x4f
+fun
+mat4x4f_ortho (left: float, right: float, bot: float, top: float, znear: float, zfar: float): mat4x4f
+fun
+mat4x4f_look_at (at: &vec3f, eye: &vec3f, up: &vec3f): mat4x4f

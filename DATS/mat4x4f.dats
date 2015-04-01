@@ -253,3 +253,142 @@ fprint_mat4x4f (out, x) = fprint_mat (out, x)
 implement
 print_mat4x4f (x) = print_mat (x)
 
+(* ****** ****** *)
+
+macdef _0 = gnumber_int<T>(0)
+macdef _1 = gnumber_int<T>(1)
+macdef mul (x, y) = gmul_val_val<T>(,(x), ,(y))
+macdef neg (x) = gneg_val<T>(,(x))
+macdef pos (x) = (,(x))
+macdef add (x, y) = gadd_val_val<T>(,(x), ,(y))
+macdef sub (x, y) = gsub_val_val<T>(,(x), ,(y))
+macdef div (x, y) = gdiv_val_val<T>(,(x), ,(y))
+
+implement
+mat4x4f_of_translation (v) = let
+//
+var res: mat
+//
+val () =
+  res.init (
+    _1, _0, _0, _0,
+    _0, _1, _0, _0,
+   _0, _0, _1, _0,
+    v[0], v[1], v[2], _1
+  )
+//
+in
+  res
+end // end of [mat4x4f_of_translation]
+
+implement
+mat4x4f_of_scale (v) = let
+//
+var res: mat
+//
+val () =
+  res.init (
+    v[0], _0, _0, _0,
+    _0, v[1], _0, _0,
+   _0, _0, v[2], _0,
+   _0, _0, _0, _1
+  )
+//
+in
+  res
+end // end of [mat4x4f_of_scale]
+
+implement
+mat4x4f_of_mat3x3f (m) = let
+//
+var res: mat
+//
+val () =
+  res.init (
+   m[0,0], m[1,0], m[2,0], _0,
+   m[0,1], m[1,1], m[2,1], _0,
+   m[0,2], m[1,2], m[2,2], _0,
+   _0, _0, _0, _1
+  )
+//
+in
+  res
+end // end of [mat4x4f_of_mat3x3f]
+
+implement
+mat4x4f_perspective (fovy, aspect, znear, zfar, handedness) = let
+//
+val _2 = gnumber_int<T>(2)
+//
+val y = div (_1, tan<T>(div (fovy, _2)))
+val x = div (y, aspect)
+val zdist = mul (sub (znear, zfar), handedness)
+val zfar_per_zdist = div (zfar, zdist)
+//
+var res: mat
+//
+val () =
+  res.init (
+    x, _0, _0, _0,
+    _0, y, _0, _0,
+    _0, _0, zfar_per_zdist, mul (neg (_1), handedness),
+    _0, _0, mul (znear, mul (zfar_per_zdist, handedness)), _0
+  )
+//
+in
+  res
+end // end of [mat4x4f_perspective]
+
+implement
+mat4x4f_ortho (lft, rgt, bot, top, znear, zfar) = let
+//
+val _2 = gnumber_int<T>(2)
+//
+var res: mat
+//
+val () =
+  res.init (
+    div (_2, sub (rgt, lft)), _0, _0, _0,
+    _0, div (_2, sub (top, bot)), _0, _0,
+    _0, _0, div (neg (_2), sub (zfar, znear)), _0,
+    div (neg (add (rgt, lft)), sub (rgt, lft)), div (neg (add (top, bot)), sub (top, bot)),
+    div (neg (add (zfar, znear)), sub (zfar, znear)), _1
+  )
+//
+in
+  res
+end // end of [mat4x4f_ortho]
+
+implement
+mat4x4f_look_at (at, eye, up) = let
+//
+var tmp0 = at - eye
+var axes2 = tmp0.normalize()
+//
+var tmp1 = crossprod (up, axes2)
+var axes0 = tmp1.normalize ()
+//
+var axes1 = crossprod (axes2, axes0)
+//
+var axes3: vec3f
+val () =
+  axes3.init (
+    neg (dotprod (axes0, eye)),
+    neg (dotprod (axes1, eye)),
+    neg (dotprod (axes2, eye))
+  )
+//
+var res: mat
+//
+val () =
+  res.init (
+    axes0[0], axes1[0], axes2[0], _0,
+    axes0[1], axes1[1], axes2[1], _0,
+    axes0[2], axes1[2], axes2[2], _0,
+    axes3[0], axes3[1], axes3[2], _1
+  )
+//
+in
+  res
+end // end of [mat4x4f_look_at]
+

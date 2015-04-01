@@ -192,6 +192,8 @@ overload print with print_vec3f of 10
 fun
 crossprod_vec3f_vec3f (&vec3f, &vec3f): vec3f
 
+overload crossprod with crossprod_vec3f_vec3f
+
 fun
 vec3f_init1 (&vec3f? >> _, float): void
 overload .init with vec3f_init1 of 10

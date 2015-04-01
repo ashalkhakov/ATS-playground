@@ -212,3 +212,123 @@ fprint_mat3x3f (out, m) = fprint_mat (out, m)
 implement
 print_mat3x3f (m) = print_mat (m)
 
+(* ****** ****** *)
+
+implement
+mat3x3f_of_translation (v) = let
+//
+var res: mat
+//
+val _1 = gnumber_int<T>(1)
+val _0 = gnumber_int<T>(0)
+//
+val () =
+  res.init (
+    _1, _0, _0,
+    _0, _1, _0,
+    v.V.[0], v.V.[1], _1
+  )
+in
+  res
+end // end of [mat3x3f_of_translation]
+
+implement
+mat3x3f_of_scale (v) = let
+//
+var res: mat
+//
+val _1 = gnumber_int<T> (1)
+val _0 = gnumber_int<T> (0)
+//
+val () =
+  res.init (
+    v.V.[0], _0, _0,
+    _0, v.V.[1], _0,
+    _0, _0, _1
+  )
+//
+in
+  res
+end // end of [mat3x3f_of_scale]
+
+implement
+mat3x3f_rotation_x_vec2f (v) = let
+//
+var res: mat
+//
+val _1 = gnumber_int<T> (1)
+val _0 = gnumber_int<T> (0)
+//
+val () =
+  res.init (
+    _1, _0, _0,
+    _0, v.V.[0], v.V.[1],
+    _0, ~v.V.[1], v.V.[0]
+  )
+//
+in
+  res
+end // end of [mat3x3f_rotation_x_vec2f]
+
+implement
+mat3x3f_rotation_y_vec2f (v) = let
+//
+var res: mat
+//
+val _1 = gnumber_int<T> (1)
+val _0 = gnumber_int<T> (0)
+//
+val () =
+  res.init (
+    v.V.[0], _0, ~v.V.[1],
+    _0, _1, _0,
+    v.V.[1], _0, v.V.[0]
+  )
+//
+in
+  res
+end // end of [mat3x3f_rotation_y_vec2f]
+
+implement
+mat3x3f_rotation_z_vec2f (v) = let
+//
+var res: mat
+//
+val _1 = gnumber_int<T> (1)
+val _0 = gnumber_int<T> (0)
+//
+val () =
+  res.init (
+    v.V.[0], v.V.[1], _0,
+    ~v.V.[1], v.V.[0], _0,
+    _0, _0, _1
+  )
+//
+in
+  res
+end // end of [mat3x3f_rotation_z_vec2f]
+
+implement
+mat3x3f_rotation_x_rad (x) = let
+  var v: vec2f
+  val () = v.init (cos<T>(x), sin<T>(x))
+in
+  mat3x3f_rotation_x_vec2f (v)
+end // end of [mat3x3f_rotation_x_rad]
+
+implement
+mat3x3f_rotation_y_rad (x) = let
+  var v: vec2f
+  val () = v.init (cos<T>(x), sin<T>(x))
+in
+  mat3x3f_rotation_y_vec2f (v)
+end // end of [mat3x3f_rotation_y_rad]
+
+implement
+mat3x3f_rotation_z_rad (x) = let
+  var v: vec2f
+  val () = v.init (cos<T>(x), sin<T>(x))
+in
+  mat3x3f_rotation_z_vec2f (v)
+end // end of [mat3x3f_rotation_z_rad]
+

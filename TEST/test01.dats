@@ -108,21 +108,12 @@ val () = {
   var m6 = 2.0f * m5
   val () = println!("multiplication result (by scalar):", m6)
 
-  // test matrix multiplication
-  var mrotx: mat3x3f
-  val () =
-    mrotx.init (
-      1.0f, 0.0f, 0.0f,
-      0.0f, vx, vy,
-      0.0f, ~vy, vx
-    ) where {
-    val angle = (g0float2float_double_float(M_PI)) / 4.0f
-    val vx = cos (angle)
-    val vy = sin (angle)
-  } // end of [val]
+  // test matrix rotation
+  var mrotx = mat3x3f_rotation_z_rad (g0float2float_double_float (M_PI) * 0.5f)
   var v0: vec3f
   val () = v0.init (1.0f, 1.0f, 0.0f)
   var v1 = v0 * mrotx
+  val () = println!("mrotx = ", mrotx)
   val () = println!("vec bef rotation:", v0)
   val () = println!("vec aft rotation:", v1)
   
