@@ -5,6 +5,12 @@
 
 (* ****** ****** *)
 //
+// Derived from https://github.com/ashalkhakov/ATS-Lang/blob/master/libats/ngc/SATS/dlist.sats
+// Original author: Hongwei Xi (hwxi AT cs DOT bu DOT edu)
+// Adapted by: Artyom Shalkhakov (artyom DOT shalkhakov AT gmail DOT com)
+//
+(* ****** ****** *)
+//
 sortdef t0p = t@ype
 sortdef vt0p = viewt@ype
 //

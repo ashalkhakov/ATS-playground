@@ -1,4 +1,10 @@
 (* ****** ****** *)
+//
+// Derived from https://github.com/ashalkhakov/ATS-Lang/blob/master/libats/ngc/DATS/dlist.dats
+// Original author: Hongwei Xi (hwxi AT cs DOT bu DOT edu)
+// Adapted by: Artyom Shalkhakov (artyom DOT shalkhakov AT gmail DOT com)
+//
+(* ****** ****** *)
 
 staload "../SATS/dlist.sats"
 
