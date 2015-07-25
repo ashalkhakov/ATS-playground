@@ -17,14 +17,18 @@
 let
   pkgs = import <nixpkgs> {};
   stdenv = pkgs.stdenv;
+
+  packages_ats1 = pkgs.callPackage /home/artyom/proj/nix/nixpkgs/pkgs/development/compilers/ats/default.nix { };
+
   patshome = "$HOME/proj/ATS-Postiats";
   patshomereloc = "$HOME/proj/ATS-Postiats-contrib";
 in rec {
   ATSDevEnv = stdenv.mkDerivation rec {
     name = "atsdev-env";
-    buildInputs = with pkgs; [ ats gmp ];
+    buildInputs = with pkgs; [ packages_ats1 gmp ];
     shellHook = ''
-      export ATSHOME=${pkgs.ats}
+      export ATSHOME=${packages_ats1}/lib/ats-anairiats-0.2.12
+      export ATSHOMERELOC=ATS-0.2.12
       export PATSHOME=${patshome}
       export PATSHOMERELOC=${patshomereloc}
     '';  
