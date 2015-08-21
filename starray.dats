@@ -178,7 +178,7 @@ end // end of [do_stuff]
 (* ****** ****** *)
 
 // another attempt
-// - pool of objects (rbuf)
+// - pool of objects (stapool)
 // - pool memory is allocated by the user
 // - pointers into the pool are easily shared (so, as many takeouts
 //   as one wants)
@@ -187,50 +187,50 @@ end // end of [do_stuff]
 
 (* ****** ****** *)
 //
-absvt@ype rbuf_vt (a:t@ype, int, int, addr) = @(ptr, size_t, ptr)
-vtypedef rbuf_vt0 (a:t@ype) = rbuf_vt (a, 0, 0, null)?
-vtypedef rbuf_vt1 (a:t@ype, n:int, l:addr) = [i:int | i <= n] rbuf_vt (a, i, n, l)
+absvt@ype stapool_vt (a:t@ype, int, int, addr) = @(ptr, size_t, ptr)
+vtypedef stapool_vt0 (a:t@ype) = stapool_vt (a, 0, 0, null)?
+vtypedef stapool_vt1 (a:t@ype, n:int, l:addr) = [i:int | i <= n] stapool_vt (a, i, n, l)
 //
-abstype rptr (a:t@ype, addr) = ptr
+abstype pptr (a:t@ype, addr) = ptr
 //
 extern
 fun{a:t@ype}
-rbuf_make {n:int} {l:addr} (
+stapool_init {n:int} {l:addr} (
   array_v (a?, l, n)
 | ptr l
 , size_t n
-, &rbuf_vt0 (a) >> rbuf_vt (a, 0, n, l)
+, &stapool_vt0 (a) >> stapool_vt (a, 0, n, l)
 ): void
 //
 extern
-fun{a:t@ype}
-rbuf_free {n,m:int} {l:addr} (
+prfun
+stapool_free {a:t@ype} {n,m:int} {l:addr} (
   // NB. the type given to buf after returning
-  // is the same as what it was prior to [buf_make]
-  &rbuf_vt (a, n, m, l) >> rbuf_vt0 (a)
-): [l1:addr | l1 == l+n*sizeof(a)] (array_v (a, l, n), array_v (a?, l1, m-n) | ptr l1)
+  // is the same as what it was prior to [stapool_init]
+  !stapool_vt (a, n, m, l) >> stapool_vt0 (a)
+): array_v (a?, l, m)
 extern
 fun{a:t@ype}
-rbuf_is_full {n,m:int} {l:addr} (
-  &rbuf_vt (a, n, m, l) >> _
+stapool_is_full {n,m:int} {l:addr} (
+  &stapool_vt (a, n, m, l) >> _
 ): bool (n < m)
 //
 extern
 fun{a:t@ype}
-rbuf_alloc {n,m:int | n < m} {l:addr} (
-  &rbuf_vt (a, n, m, l) >> rbuf_vt (a, n+1, m, l)
+stapool_alloc {n,m:int | n < m} {l:addr} (
+  &stapool_vt (a, n, m, l) >> stapool_vt (a, n+1, m, l)
 , a
-): rptr (a, l)
+): pptr (a, l)
 //
 extern
 fun{a:t@ype}
-rptr_read {n,m:int} {l:addr} (&rbuf_vt (a, n, m, l), rptr (a, l)): a
+pptr_read {n,m:int} {l:addr} (&stapool_vt (a, n, m, l), pptr (a, l)): a
 //
 extern
 fun{a:t@ype}
-rptr_write {n,m:int} {l:addr} (&rbuf_vt (a, n, m, l), rptr (a, l), a): void
+pptr_write {n,m:int} {l:addr} (&stapool_vt (a, n, m, l), pptr (a, l), a): void
 //
-(* ****** end of [rbuf.sats] ****** *)
+(* ****** end of [stapool.sats] ****** *)
 
 //
 local
@@ -240,41 +240,48 @@ local
 // allowed to refine the tuple elements, but not
 // add some new elements, even if we only add proofs
 // NB. we don't add a top-level constraint to the top (e.g. [n>=0])
-assume rbuf_vt (a:t@ype, n:int, m:int, l:addr) = @(
+assume stapool_vt (a:t@ype, n:int, m:int, l:addr) = @(
   (array_v (a, l, n), array_v (a?, l + n*sizeof(a), m-n) | ptr (l + n*sizeof(a)))
-//, size_t n // TODO: just remove it, we can calculate it (OR, remove the pointer above instead)
 , size_t m
 , ptr l
 ) (* end of [buf_vt] *)
 //
-assume rptr (a:t@ype, l:addr) = [n,m:nat;l1:addr] (
+assume pptr (a:t@ype, l:addr) = [n,m:nat;l1:addr] (
   {n1:nat | n <= n1; n1 <= m} () -<> vsubw_p (a @ l1, array_v (a, l, n1))
 , int n
 , int m
 | ptr l1
-) (* end of [rptr] *)
+) (* end of [pptr] *)
 //
 in (* of [local] *)
 //
 implement{a}
-rbuf_make {n} {l} (pf_bytes | p, n, buf) = () where {
+stapool_init {n} {l} (pf_bytes | p, n, buf) = () where {
   prval () = lemma_array_v_param {a?} (pf_bytes)
   prval () = $effmask_wrt (buf.0.0 := array_v_nil {a} ())
   prval () = $effmask_wrt (buf.0.1 := pf_bytes)
   val () = buf.0.2 := p
   val () = buf.1 := n
   val () = buf.2 := p
-} (* end of [rbuf_make] *)
+} (* end of [stapool_init] *)
 //
-implement{a}
-rbuf_free {m,n} {l} (buf) = let
+primplement
+stapool_free {a} {m,n} {l} (buf) = let
+//
+val (pf1_arr, pf2_arr) = (buf.0.0, buf.0.1)
+//
+prval pf1_arr = __trustme {a} (pf1_arr) where {
+  // can be proven by induction over [n] using [topize]
+  extern
+  prval __trustme : {a:t@ype} {l:addr} {n:int} array_v (INV(a), l, n) -<> array_v (a?, l, n)
+} // end of [prval]
 //
 in
-  (buf.0.0, buf.0.1 | buf.0.2)
-end // end of [rbuf_free]
+  array_v_unsplit {a?} (pf1_arr, pf2_arr)
+end // end of [stapool_free]
 //
 implement{a}
-rbuf_is_full {n,m} {l} (buf) = let
+stapool_is_full {n,m} {l} (buf) = let
 //
 extern
 castfn
@@ -305,10 +312,10 @@ in
 //
 res
 //
-end // end of [rbuf_is_full]
+end // end of [stapool_is_full]
 //
 implement{a}
-rbuf_alloc {n,m} {l} (buf, x) = let
+stapool_alloc {n,m} {l} (buf, x) = let
   prval pf1_arr = buf.0.0
   prval (pf1_at, pf2_arr) = array_v_uncons {a?} {l+n*sizeof(a)} (buf.0.1)
   val p = buf.0.2
@@ -332,10 +339,10 @@ rbuf_alloc {n,m} {l} (buf, x) = let
   prval () = $effmask_wrt (buf.0.1 := pf2_arr)
 in
   #[n,m,l1 | (pf, n, m | p)]
-end // end of [rbuf_alloc]
+end // end of [stapool_alloc]
 //
 implement{a}
-rptr_read {n1,m1} {l} (buf, r) = let
+pptr_read {n1,m1} {l} (buf, r) = let
 //
 val (pf_sub, n, m | p) = r
 prval [n:int] EQINT () = eqint_make_gint (n)
@@ -361,10 +368,10 @@ in
 //
 res
 //
-end // end of [rptr_read]
+end // end of [pptr_read]
 //
 implement{a}
-rptr_write {n1,m1} {l} (buf, r, x) = let
+pptr_write {n1,m1} {l} (buf, r, x) = let
 //
 val (pf_sub, n, m | p) = r
 prval [n:int] EQINT () = eqint_make_gint (n)
@@ -387,12 +394,17 @@ val () = ptr_set<a> (pf_at | p, x)
 prval () = $effmask_wrt (buf.0.0 := fpf1 (pf_at))
 //
 in
-end // end of [rptr_write]
+end // end of [pptr_write]
 //
 end (* of [local] *)
 //
 
-(* ****** end of [rbuf.dats] ****** *)
+(* ****** end of [stapool.dats] ****** *)
+
+// issues with stapool:
+// - freeing up the array
+
+(* ****** ****** *)
 
 fun
 do_other_stuff (): void = let
@@ -405,25 +417,19 @@ val () = println!("do other stuff: start")
 var arr: @[int][BUFSZ] // uninitialized
 val p_arr = addr@(arr)
 //
-var buf: rbuf_vt0 (int) // uninitialized
+var pool: stapool_vt0 (int) // uninitialized
 val p1_arr = p_arr
-val () = rbuf_make<int> (view@(arr) | p1_arr, (i2sz)BUFSZ, buf)
+val () = stapool_init<int> (view@(arr) | p1_arr, (i2sz)BUFSZ, pool)
 //
-val ref1 = rbuf_alloc<int> (buf, 1)
-val ref2 = rbuf_alloc<int> (buf, 2)
-val ref3 = rbuf_alloc<int> (buf, 3)
+val ref1 = stapool_alloc<int> (pool, 1)
+val ref2 = stapool_alloc<int> (pool, 2)
+val ref3 = stapool_alloc<int> (pool, 3)
 //
-val () = println!("ref1 = ", rptr_read<int> (buf, ref1), ", ref2 = ", rptr_read<int> (buf, ref2))
-val () = rptr_write<int> (buf, ref2, 5)
-val () = println!("ref2 = ", rptr_read (buf, ref2))
+val () = println!("ref1 = ", pptr_read<int> (pool, ref1), ", ref2 = ", pptr_read<int> (pool, ref2))
+val () = pptr_write<int> (pool, ref2, 5)
+val () = println!("ref2 = ", pptr_read (pool, ref2))
 //
-val (pf1_arr, pf2_arr | _) = rbuf_free (buf)
-prval pf1_arr = __trustme {int} (pf1_arr) where {
-  // can be proven by induction over [n] using [topize]
-  extern
-  prval __trustme : {a:t@ype} {l:addr} {n:int} array_v (INV(a), l, n) -<> array_v (a?, l, n)
-} // end of [prval]
-prval () = view@(arr) := array_v_unsplit {int?} (pf1_arr, pf2_arr)
+prval () = view@(arr) := stapool_free (pool)
 //
 val () = println!("do other stuff: completed")
 //
