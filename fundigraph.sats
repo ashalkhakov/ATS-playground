@@ -35,3 +35,15 @@ fun{env:vt0p}
 fundigraph_foreach_dfs_from_env
   {n:nat}
   (digraph (n), i: sizeLt(n), &(env) >> _): void
+
+fun{env:vt0p}
+fundigraph_scc$beg (&(env) >> _): void
+fun{env:vt0p}
+fundigraph_scc$node (size_t, &(env)>>_): void
+fun{env:vt0p}
+fundigraph_scc$end (&(env) >> _): void
+
+fun{env:vt0p}
+fundigraph_scc
+  {n:nat}
+  (digraph (n), &(env) >> _): void

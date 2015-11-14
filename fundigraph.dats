@@ -137,6 +137,140 @@ fundigraph_foreach_dfs_from_env {n} (dg, root, env) = let
   val () = array_ptr_free {bool} (pf_vis, pf_visf | p_vis)
 in
 end // end of [fundigraph_foreach_reachable]
+//
+implement{env}
+fundigraph_scc$beg (env) = ()
+implement{env}
+fundigraph_scc$node (v, env) = ()
+implement{env}
+fundigraph_scc$end (env) = ()
+//
+local
+//
+typedef
+vertex_info = @{onstack=bool, index=int, lowlink= int}
+//
+in // in of [local]
+//
+implement{env}
+fundigraph_scc {n} (dg, E) = let
+  val Digraph (sz, aref) = dg
+  
+  typedef T = size_t
+
+  #define UNDEFINED ~1
+
+  var cur = 0 : int
+  val p_cur = addr@(cur)
+  prval [lc:addr] EQADDR () = eqaddr_make_ptr (p_cur)
+  
+  var stack = list_vt_nil {size_t} ()
+  val p_stack = addr@stack
+  prval [ls:addr] EQADDR () = eqaddr_make_ptr (p_stack)
+
+  val (pf_vi, pf_vif | p_vi) = array_ptr_alloc<vertex_info> (sz)
+  prval [l:addr] EQADDR () = eqaddr_make_ptr (p_vi)
+  implement
+  array_initize$init<vertex_info> (i, x) = {
+    val () = x.onstack := false
+    val () = x.index := UNDEFINED
+    val () = x.lowlink := UNDEFINED
+  } (* end of [array_initize$init] *)
+  val () = array_initize<vertex_info> (!p_vi, sz)
+
+  //
+  vtypedef senv0 = env
+  vtypedef senv1 = env //(array_v (vertex_info, l, n), int @ lc, List_vt(T) @ ls | env)
+  viewdef V = (array_v (vertex_info, l, n), int @ lc, List_vt(T) @ ls)
+  //
+  extern
+  castfn senv_to (senv0):<> senv1
+  extern
+  castfn senv_fro (senv1):<> senv0
+  //
+
+  fun
+  strongconnect(pf: !V >> _ | v: sizeLt(n), env: &(senv1) >> _): void = let  
+    // Set the depth index for v to the smallest unused index
+    val curindex = !p_cur + 1
+    val () = !p_vi.[v].index := curindex
+    val () = !p_vi.[v].lowlink := curindex
+    val () = !p_cur := curindex
+
+    val () = !p_vi.[v].onstack := true
+    prval () = lemma_list_vt_param (!p_stack)
+    val () = !p_stack := list_vt_cons{size_t}((g0ofg1)v, !p_stack)
+//
+//    val () = println!("pushed: ", v)
+//
+    // Consider successors of v 
+    fun
+    aux (pf: !V >> _ | xs: List (size_t), env: &(senv1)): void =
+      case+ xs of
+      | list_nil () => ()
+      | list_cons (w, xs) => let
+        val w = $UN.cast{sizeLt(n)} (w)
+      in
+        if :(env: senv1) => !p_vi.[w].index = UNDEFINED then begin
+          // Successor w has not yet been visited; recurse on it
+          strongconnect (pf | w, env);
+          !p_vi.[v].lowlink := min (!p_vi.[v].lowlink, !p_vi.[w].lowlink)
+        end else if :(env: senv1) => !p_vi.[w].onstack then begin
+          // Successor w is in stack S and hence in the current SCC
+          !p_vi.[v].lowlink := min (!p_vi.[v].lowlink, !p_vi.[w].index)
+        end;
+        aux (pf | xs, env)
+      end
+//
+    val xs = arrayref_get_at (aref, v)
+    // FIXME: depends entirely on our use of funset_listord...
+    val xs = $UN.castvwtp0{List(size_t)} (xs)
+    val () = aux (pf | xs, env)
+//
+    fun aux0 (pf: !V >> _ | env: &senv1 >> _): void = let
+      val- ~list_vt_cons (w, xs) = !p_stack
+      val () = !p_stack := xs
+      
+//      val () = println!("popped: ", w, " vs ", v)
+      
+      val w = $UN.cast{sizeLt(n)} (w)
+      var vr = array_get_at_guint (!p_vi, w)
+      val () = vr.onstack := false
+      val () = array_set_at_guint (!p_vi, w, vr)
+      val () = fundigraph_scc$node<env> (w, env)
+    in
+      if w <> v then aux0 (pf | env)
+    end
+  in
+    // If v is a root node, pop the stack and generate an SCC
+    if !p_vi.[v].lowlink = !p_vi.[v].index then let
+      val () = fundigraph_scc$beg<env> (env)
+      val () = aux0 (pf | env)
+      val () = fundigraph_scc$end<env> (env)
+    in
+    end
+  end // end of [strongconnect]
+//
+  fun
+  loop {i:nat | i <= n} (pf: !V >> _ | v: size_t i, env: &senv1): void =
+    if :(env: senv1) => v < sz then let
+    in
+      if:(env: senv1) => !p_vi.[v].index = UNDEFINED then
+        strongconnect(pf | v, env);
+      loop (pf | succ(v), env)
+    end // end of [loop]
+  prval pf = (pf_vi, view@cur, view@stack)
+  val () = loop (pf | (i2sz)0, E)
+  prval () = $effmask_wrt (pf_vi := pf.0)
+  prval () = $effmask_wrt (view@cur := pf.1)
+  prval () = $effmask_wrt (view@stack := pf.2)
+  
+  val () = array_ptr_free {vertex_info} (pf_vi, pf_vif | p_vi)
+  val- ~list_vt_nil () = !p_stack
+in
+end
+
+end // end of [fundigraph_scc]
 
 implement
 main0 () = {
@@ -161,4 +295,26 @@ main0 () = {
   // should print: 2 0 1 3
 
   val () = println!("finished!")
+
+  // test strongly connected components
+  var dg1 = fundigraph_make ((i2sz)5)
+
+  val-false = fundigraph_insert_edge (dg1, (i2sz)1, (i2sz)0)
+  val-false = fundigraph_insert_edge (dg1, (i2sz)0, (i2sz)2)
+  val-false = fundigraph_insert_edge (dg1, (i2sz)2, (i2sz)1)
+  val-false = fundigraph_insert_edge (dg1, (i2sz)0, (i2sz)3)
+  val-false = fundigraph_insert_edge (dg1, (i2sz)3, (i2sz)4)
+
+  val () = fprintln!(stdout_ref, "digraph: ", dg1)
+
+  implement
+  fundigraph_scc$beg<int> (e) = print!("component ", e, ": ")
+  implement
+  fundigraph_scc$node<int> (v, env) = print!(v, " ")
+  implement
+  fundigraph_scc$end<int> (env) = (print_newline(); env := succ(env))
+  var env = 0 : int
+  val () = println!("testing SCC:")
+  val () = fundigraph_scc<int> (dg1, env)
 }
+
