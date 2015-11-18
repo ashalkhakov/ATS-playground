@@ -14,7 +14,7 @@ fun{
   &digraph (n) >> _
 , size_t i(*src*)
 , size_t j(*dst*)
-) : bool
+) : void
 
 fun{
 } fprint_fundigraph$sep (out: FILEref): void // "; "
