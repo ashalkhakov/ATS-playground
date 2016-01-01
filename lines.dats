@@ -94,6 +94,9 @@ fun{a:t@ype}
 pixmap_get_height {m,n:int} (&pixmap (INV(a), m, n)): size_t n
 extern
 fun
+pixmap_clear {m,n:int} (&pixmap (INV(a), m, n), a): void
+extern
+fun
 pixmap_save_ppm {m,n:int} (&pixmap (uint32, m, n), string): void
 
 overload [] with pixmap_set_at_int
@@ -148,6 +151,17 @@ implement{a}
 pixmap_get_width {m,n} (pm) = pm.2
 implement{a}
 pixmap_get_height {m,n} (pm) = pm.3
+
+implement{a}
+pixmap_clear {m,n} (pm, fill) = {
+  implement(env)
+  matrix_foreach$fwork<a><env> (x, env) = {
+    val () = x := fill
+  } (* end of [matrix_foreach$fwork] *)
+  val (pf_mat, pf_free | m, n, p_mat) = pm
+  val () = matrix_foreach<a> (!p_mat, m, n)
+  val () = pm := (pf_mat, pf_free | m, n, p_mat)
+} (* end of [pixmap_clear] *)
 
 implement
 pixmap_save_ppm {m,n} (pm, filename) = {
