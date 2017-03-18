@@ -27,5 +27,9 @@ The program can also output a PPM file prior to exiting. If this is
 what you want, please comment out a call to `pixmap_save_ppm` in the
 `main0` function).
 
+## shuntingyard.dats
+
+Shunting yard algorithm implementation. Reclaims memory manually.
+
 --Artyom Shalkhakov
 
