@@ -27,6 +27,45 @@ The program can also output a PPM file prior to exiting. If this is
 what you want, please comment out a call to `pixmap_save_ppm` in the
 `main0` function).
 
+## `dom`
+
+The idea is to implement a doubly-linked n-ary tree (i.e. a tree with
+links between siblings, as well as from siblings back to their
+parents) in a typeful manner. Such a tree is most useful in a
+DOM/XPath implementation, and that has been used as a motivator.
+
+The end result? Putting a lot of indices into a data structure makes
+it hard to program with.
+
+## `base64.dats`
+
+BASE64 encoding/decoding routines.
+
+## `lightbulb.dats`
+
+A lightbulb, demonstrates a stateful object.
+
+## `offset.dats`
+
+Freely duplicable "offsets" into an fully linear array. Allows the
+style of programming where you can get "pointers" into an array, but
+it is statically guaranteed that the pointers are only used when the
+array is safe to work with.
+
+## `nullable.dats`
+
+Flat "nullable" kind of type. Inspired by databases. Assume you want a
+datatype like `int` but that might be not present (or its value might
+be unknown). If you use `Option(int)`, then it means one level of
+indirection, and a heap allocation to boot! `Nullable(int)` solves
+this issue: it is just a pair of `bool` and `int` (its type
+parameter), no heap allocation is ever involved.
+
+## `unknowntype.dats`
+
+The function `printme` should work with any type of a value as soon as
+*tag* is passed in.
+
 ## `shuntingyard.dats`
 
 Shunting yard algorithm implementation. Provides a math formula
